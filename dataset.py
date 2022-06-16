@@ -1,16 +1,15 @@
-import umap
 from pyexpat import model
 from torch.utils.data import Dataset
 from melUtilities import *
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from sklearn.preprocessing import MinMaxScaler
+from umap import UMAP
 
 # ----------------------------
 # Sound Dataset
 # ----------------------------
 class DroneDS(Dataset):
-    def __init__(self, df, train, nb_channels = 2, mode_reduc = ['PCA','TSNE','UMAP']):
+    def __init__(self, df, train, nb_channels, mode_reduc = ['PCA','TSNE','UMAP']):
         self.df = df
         self.duration = 4000
         self.sr = 44100
@@ -59,15 +58,28 @@ class DroneDS(Dataset):
             dur_aud = pad_trunc(rechan, self.duration)
             sgram = spectro_gram(dur_aud, n_mels=64, n_fft=1024, hop_len=None)
 
-        if self.mode_reduc = "PCA"
-            pca = PCA(n_components= self.pca_comp)
+        if self.mode_reduc == "PCA":
+            pca = PCA(n_components= 2)
             if self.channel == 2:
                 sgram = pca.fit_transform(sgram[0]), pca.fit_transform(sgram[1])
             else:
                 sgram = pca.fit_transform(sgram)
-
             sgram = torch.Tensor(sgram)
 
-        elif self.mode_reduc = "TSNE"
-
+        elif self.mode_reduc == "TSNE":
+            tsne = TSNE(n_components= 2)
+            if self.channel == 2:
+                sgram = tsne.fit_transform(sgram[0]), pca.fit_transform(sgram[1])
+            else:
+                sgram = tsne.fit_transform(sgram)
+            sgram = torch.Tensor(sgram)
+                
+        elif self.mode_reduc == "UMAP":
+            umap = UMAP(n_components= 2)
+            if self.channel == 2:
+                sgram = umap.fit_transform(sgram[0]), pca.fit_transform(sgram[1])
+            else:
+                sgram = umap.fit_transform(sgram)
+            sgram = torch.Tensor(sgram)
+                
         return sgram, labelId
