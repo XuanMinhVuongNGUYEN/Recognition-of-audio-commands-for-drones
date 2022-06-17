@@ -9,7 +9,7 @@ from umap import UMAP
 # Sound Dataset
 # ----------------------------
 class DroneDS(Dataset):
-    def __init__(self, df, train, nb_channels, mode_reduc = ['PCA','TSNE','UMAP']):
+    def __init__(self, df, train, nb_channels=2, mode_reduc = ['PCA','TSNE','UMAP']):
         self.df = df
         self.duration = 4000
         self.sr = 44100
@@ -69,7 +69,7 @@ class DroneDS(Dataset):
         elif self.mode_reduc == "TSNE":
             tsne = TSNE(n_components= 2)
             if self.channel == 2:
-                sgram = tsne.fit_transform(sgram[0]), pca.fit_transform(sgram[1])
+                sgram = tsne.fit_transform(sgram[0]), tsne.fit_transform(sgram[1])
             else:
                 sgram = tsne.fit_transform(sgram)
             sgram = torch.Tensor(sgram)
@@ -77,7 +77,7 @@ class DroneDS(Dataset):
         elif self.mode_reduc == "UMAP":
             umap = UMAP(n_components= 2)
             if self.channel == 2:
-                sgram = umap.fit_transform(sgram[0]), pca.fit_transform(sgram[1])
+                sgram = umap.fit_transform(sgram[0]), umap.fit_transform(sgram[1])
             else:
                 sgram = umap.fit_transform(sgram)
             sgram = torch.Tensor(sgram)
