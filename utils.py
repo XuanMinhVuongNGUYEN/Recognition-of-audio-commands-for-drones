@@ -10,10 +10,14 @@ from mfccUtilities import *
 import torch
 
 def heatmap(values, predicted_values):
-    conf_matrix = confusion_matrix(values, predicted_values)
-    sns.heatmap(conf_matrix, annot = True,)
+    cm = confusion_matrix(values, predicted_values)
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax = sns.heatmap(data=cm, fmt='.0f', xticklabels=np.unique(predicted_values).size, yticklabels=np.unique(predicted_values).size, annot = True, linewidths=0)
+    ax.set_aspect("equal", "datalim")
+    ax.set_ylabel("True Label", fontsize=10, weight = "bold")
+    ax.set_xlabel("Predicted Label", fontsize = 10, weight = "bold")
     plt.title("La matrice de confusion")
-    plt.show()
+    plt.show(fig)
 
 def plot_audio(audio: np.ndarray, fig_title: str = 'Signal audio') -> None:
     """Visualize the audio signal.
@@ -206,3 +210,35 @@ def stratified_split(datapath, test_pct = 0.2, keep_classes = None):
         test_indices = np.array(test_index)
     train_df, test_df = dataframe.iloc[train_indices], dataframe.iloc[test_indices]
     return train_df, test_df
+
+def inference(model, val_dl, device):
+  correct_prediction = 0
+  total_prediction = 0
+  y_pred = []
+  y = []
+
+  # Disable gradient updates
+  with torch.no_grad():
+    for data in val_dl:
+      # Get the input features and target labels, and put them on the GPU
+      inputs, labels = data[0].to(device), data[1].to(device)
+      y.extend(labels)
+
+      # Normalize the inputs
+      inputs_m, inputs_s = inputs.mean(), inputs.std()
+      inputs = (inputs - inputs_m) / inputs_s
+
+      # Get predictions
+      outputs = model(inputs)
+
+      # Get the predicted class with the highest score
+      _, prediction = torch.max(outputs,1)
+      y_pred.extend(prediction)
+
+      # Count of predictions that matched the target label
+      correct_prediction += (prediction == labels).sum().item()
+      total_prediction += prediction.shape[0]
+    
+  acc = correct_prediction/total_prediction
+  print(f'Accuracy: {acc*100:.2f}, Total items: {total_prediction}')
+  return acc, total_prediction
